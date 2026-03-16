@@ -3,181 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PNC Quantum Dashboard</title>
+    <title>Quantum PNC - Warehouse Intelligence</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
     <style>
-        :root { --primary: #0f172a; --accent: #3b82f6; --success: #10b981; }
-        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #1e293b; }
-        .navbar { background: var(--primary); color: white; border-radius: 0 0 25px 25px; padding: 1.5rem; }
-        .card-panel { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 25px; margin-bottom: 2rem; }
-        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; padding: 12px; color: #64748b; }
-        .nav-pills .nav-link.active { background-color: var(--accent) !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
-        .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
-        #reader { border-radius: 20px; overflow: hidden; display: none; margin-bottom: 1rem; border: 3px solid var(--accent); }
-        .btn-submit { background: var(--primary); color: white; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; border: none; transition: 0.3s; }
-        .btn-submit:hover { background: #1e293b; transform: translateY(-2px); }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --success: #22c55e; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .header-logic { background: linear-gradient(90deg, #1e293b, #0f172a); padding: 20px; border-bottom: 2px solid var(--accent); }
+        .quantum-card { background: var(--card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .nav-pills .nav-link { color: #94a3b8; border-radius: 12px; font-weight: bold; margin: 0 5px; }
+        .nav-pills .nav-link.active { background: var(--accent) !important; color: var(--bg); }
+        .form-control, .form-select { background: #0f172a; border: 1px solid #334155; color: white; border-radius: 12px; padding: 12px; }
+        .form-control:focus { background: #0f172a; color: white; border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        .btn-quantum { background: var(--accent); color: var(--bg); font-weight: 800; border-radius: 12px; border: none; padding: 15px; transition: 0.3s; width: 100%; }
+        .btn-quantum:hover { transform: scale(1.02); filter: brightness(1.1); }
+        #reader { border-radius: 15px; overflow: hidden; border: 2px solid var(--accent); display: none; margin-bottom: 15px; }
+        .stat-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; text-align: center; }
+        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); z-index:9999; flex-direction:column; justify-content:center; align-items:center; }
     </style>
 </head>
 <body>
 
-<nav class="navbar shadow-lg">
-    <div class="container text-center">
-        <h4 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2 text-info"></i>PNC MANAGEMENT PRO</h4>
-    </div>
-</nav>
+<div class="loading-overlay" id="loader">
+    <div class="spinner-border text-info" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="mt-3 fw-bold text-info">SINCRONIZANDO CEREBRO...</h5>
+</div>
 
-<div class="container mt-n4" style="max-width: 600px; margin-top: -20px;">
+<div class="header-logic text-center mb-4">
+    <h2 style="font-family: 'Orbitron'; letter-spacing: 2px;" class="text-accent mb-0">QUANTUM PNC</h2>
+    <small class="text-secondary">INTELLIGENCE SYSTEM v6.0</small>
+</div>
+
+<div class="container" style="max-width: 550px;">
     
-    <div class="card-panel">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold m-0 text-uppercase text-muted">Estadísticas en Vivo</h6>
-            <button class="btn btn-sm btn-light" onclick="actualizarGraficos()"><i class="fas fa-sync"></i></button>
-        </div>
-        <div class="row text-center mb-4">
-            <div class="col-6 border-end">
-                <small class="text-muted d-block">PENDIENTES</small>
-                <span id="count-abierto" class="stat-val text-danger">0</span>
+    <div class="quantum-card mb-4">
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <div class="stat-box">
+                    <small class="text-secondary d-block">PENDIENTES</small>
+                    <span id="s-abierto" class="h4 fw-bold text-danger">0</span>
+                </div>
             </div>
             <div class="col-6">
-                <small class="text-muted d-block">RESUELTOS</small>
-                <span id="count-cerrado" class="stat-val text-success">0</span>
+                <div class="stat-box">
+                    <small class="text-secondary d-block">RESUELTOS</small>
+                    <span id="s-cerrado" class="h4 fw-bold text-success">0</span>
+                </div>
             </div>
         </div>
         
-        <canvas id="chartOperadores" height="150"></canvas>
+        <canvas id="mainChart" height="140"></canvas>
     </div>
 
-    <div class="card-panel">
-        <ul class="nav nav-pills nav-fill mb-4 bg-light p-1 rounded-3">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-reg">REPORTAR</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-sol">SOLUCIONAR</button></li>
+    <div class="quantum-card">
+        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-black rounded-3">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#p-reg">REPORTE</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#p-sol">SOLUCIÓN</button></li>
         </ul>
 
         <div class="tab-content">
-            <div class="tab-pane fade show active" id="tab-reg">
+            <div class="tab-pane fade show active" id="p-reg">
                 <div id="reader"></div>
-                <button class="btn btn-outline-primary w-100 mb-3 rounded-3" onclick="startScan()">
-                    <i class="fas fa-qrcode me-2"></i> ESCANEAR UBICACIÓN
+                <button class="btn btn-outline-info w-100 mb-3 rounded-3" onclick="startScanner()">
+                    <i class="fas fa-expand me-2"></i> ESCANEAR RACK
                 </button>
-                
+
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">📍 UBICACIÓN DETECTADA</label>
-                    <input type="text" id="ubicacion" class="form-control bg-light fw-bold" readonly>
+                    <label class="small text-secondary fw-bold">ID UBICACIÓN</label>
+                    <input type="text" id="ubicacion" class="form-control" readonly placeholder="Esperando escaneo...">
                 </div>
 
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">OPERADOR</label>
+                    <label class="small text-secondary fw-bold">OPERADOR DE INVENTARIO</label>
                     <select id="nombre" class="form-select">
-                        <option>RICARDO SANTIAGO</option>
                         <option>JANIN AGUILAR</option>
+                        <option>RICARDO SANTIAGO</option>
                         <option>JOSE GONZALES</option>
                         <option>MICHAEL HERNANDE</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">DETALLE DEL PNC</label>
-                    <textarea id="detalle" class="form-control" rows="2" placeholder="Describe el problema..."></textarea>
+                    <label class="small text-secondary fw-bold">DESCRIPCIÓN TÉCNICA</label>
+                    <textarea id="detalle" class="form-control" rows="2" placeholder="Escribe el hallazgo..."></textarea>
                 </div>
 
                 <div class="mb-4">
-                    <label class="small fw-bold text-muted">FOTO EVIDENCIA</label>
+                    <label class="small text-secondary fw-bold">EVIDENCIA FOTO</label>
                     <input type="file" id="foto" accept="image/*" capture="camera" class="form-control">
                 </div>
 
-                <button class="btn-submit" onclick="enviarReporte()">REGISTRAR INCIDENCIA</button>
+                <button class="btn-quantum" onclick="procesarEnvio()">EJECUTAR REGISTRO <i class="fas fa-bolt ms-2"></i></button>
             </div>
 
-            <div class="tab-pane fade" id="tab-sol">
-                <div class="text-center py-3">
-                    <i class="fas fa-shield-check fa-3x text-success mb-2"></i>
-                    <h6 class="fw-bold">VALIDACIÓN DE SUPERVISOR</h6>
+            <div class="tab-pane fade" id="p-sol">
+                <div class="text-center py-4">
+                    <i class="fas fa-brain fa-3x text-info mb-3"></i>
+                    <h5 class="fw-bold">Cierre de Supervisor</h5>
                 </div>
-                <div class="mb-3">
-                    <input type="text" id="idBusqueda" class="form-control form-control-lg text-center fw-bold" placeholder="PNC-XXXXX">
-                </div>
-                <div class="mb-3">
-                    <input type="text" id="supervisor" class="form-control" placeholder="Nombre del Supervisor">
-                </div>
-                <button class="btn btn-success w-100 p-3 fw-bold rounded-3" onclick="cerrarPNC()">MARCAR COMO RESUELTO</button>
+                <input type="text" id="idCierre" class="form-control mb-3 text-center fw-bold" placeholder="ID PNC-XXXXX">
+                <input type="text" id="supervisor" class="form-control mb-4" placeholder="Nombre de quien resuelve">
+                <button class="btn btn-success w-100 p-3 fw-bold rounded-3" onclick="procesarCierre()">FINALIZAR INCIDENCIA</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let miGrafico;
+    // URL DE TU IMPLEMENTACIÓN DE GOOGLE APPS SCRIPT
+    // IMPORTANTE: Pon aquí la URL que te da Google al "Implementar"
+    const WEB_APP_URL = "https://script.google.com/macros/s/TU_ID_AQUI/exec";
 
-    // --- LÓGICA DE GRÁFICOS ---
-    function actualizarGraficos() {
+    let chartInstance;
+
+    // --- CEREBRO: COMUNICACIÓN CON GOOGLE ---
+    async function llamarCerebro(datos) {
+        document.getElementById('loader').style.display = 'flex';
+        // Usamos google.script.run si el HTML está dentro de Google, 
+        // o fetch si quieres que GitHub hable con Google.
+        return new Promise((resolve, reject) => {
+            google.script.run
+                .withSuccessHandler(res => {
+                    document.getElementById('loader').style.display = 'none';
+                    resolve(res);
+                })
+                .withFailureHandler(err => {
+                    document.getElementById('loader').style.display = 'none';
+                    reject(err);
+                })
+                .procesarFormulario(datos);
+        });
+    }
+
+    // --- CEREBRO: GRÁFICOS ---
+    function initChart() {
         google.script.run.withSuccessHandler(stats => {
-            document.getElementById('count-abierto').innerText = stats.estatus["ABIERTO"];
-            document.getElementById('count-cerrado').innerText = stats.estatus["CERRADO"];
+            document.getElementById('s-abierto').innerText = stats.estatus["ABIERTO"];
+            document.getElementById('s-cerrado').innerText = stats.estatus["CERRADO"];
             
-            const ctx = document.getElementById('chartOperadores').getContext('2d');
-            const labels = Object.keys(stats.operadores);
-            const data = Object.values(stats.operadores);
-
-            if (miGrafico) miGrafico.destroy();
-            miGrafico = new Chart(ctx, {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: Object.keys(stats.operadores),
                     datasets: [{
-                        label: 'Incidencias Reportadas',
-                        data: data,
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 8
+                        label: 'Hallazgos',
+                        data: Object.values(stats.operadores),
+                        backgroundColor: '#38bdf8'
                     }]
                 },
                 options: { 
-                    responsive: true,
+                    color: '#94a3b8',
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    scales: { y: { beginAtZero: true, grid: { color: '#334155' } } }
                 }
             });
         }).getEstadisticas();
     }
 
     // --- ESCÁNER ---
-    function startScan() {
+    function startScanner() {
         const scanner = new Html5Qrcode("reader");
         document.getElementById('reader').style.display = 'block';
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+        scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
             document.getElementById('ubicacion').value = text;
             scanner.stop();
             document.getElementById('reader').style.display = 'none';
         });
     }
 
-    // --- ENVÍO DE DATOS ---
-    async function enviarReporte() {
-        const file = document.getElementById('foto').files[0];
-        if(!file || !document.getElementById('ubicacion').value) return alert("Falta ubicación o foto");
+    // --- PROCESOS ---
+    async function procesarEnvio() {
+        const fotoFile = document.getElementById('foto').files[0];
+        if(!fotoFile) return alert("¡Sin foto no hay evidencia!");
         
         const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const datos = {
+        reader.readAsDataURL(fotoFile);
+        reader.onload = async () => {
+            const payload = {
                 accion: "NUEVO",
                 nombre: document.getElementById('nombre').value,
                 ubicacion: document.getElementById('ubicacion').value,
                 detalle: document.getElementById('detalle').value,
-                turno: "MIXTO",
                 foto: reader.result
             };
-            google.script.run.withSuccessHandler(res => {
-                alert(res);
-                location.reload();
-            }).procesarFormulario(datos);
+            const res = await llamarCerebro(payload);
+            alert(res);
+            location.reload();
         };
     }
 
-    window.onload = actualizarGraficos;
+    async function procesarCierre() {
+        const payload = {
+            accion: "CERRAR",
+            idBusqueda: document.getElementById('idCierre').value,
+            supervisor: document.getElementById('supervisor').value
+        };
+        const res = await llamarCerebro(payload);
+        alert(res);
+        location.reload();
+    }
+
+    window.onload = initChart;
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
